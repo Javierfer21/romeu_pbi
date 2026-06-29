@@ -1,5 +1,6 @@
 import re
 from typing import List
+from scenarios import SCENARIOS as _ALL_SCENARIOS
 
 # Scoring thresholds → nivel
 def _score_to_nivel(score: int) -> str:
@@ -221,8 +222,13 @@ def _matches(text: str, keywords: List[str]) -> bool:
 def evaluate_prompt(scenario: dict, student_prompt: str) -> dict:
     scenario_id = scenario["id"]
 
-    if (_is_copied(student_prompt, IMPROVED_PROMPTS[scenario_id])
-            or _is_copied(student_prompt, scenario["goal"], threshold=0.45)):
+    all_examples = list(IMPROVED_PROMPTS.values())
+    all_goals = [s["goal"] for s in _ALL_SCENARIOS]
+    copied = (
+        any(_is_copied(student_prompt, ex) for ex in all_examples)
+        or any(_is_copied(student_prompt, g, threshold=0.45) for g in all_goals)
+    )
+    if copied:
         return {
             "puntuacion_total": 0,
             "nivel": "Principiante",
