@@ -221,7 +221,8 @@ def _matches(text: str, keywords: List[str]) -> bool:
 def evaluate_prompt(scenario: dict, student_prompt: str) -> dict:
     scenario_id = scenario["id"]
 
-    if _is_copied(student_prompt, IMPROVED_PROMPTS[scenario_id]):
+    if (_is_copied(student_prompt, IMPROVED_PROMPTS[scenario_id])
+            or _is_copied(student_prompt, scenario["goal"], threshold=0.45)):
         return {
             "puntuacion_total": 0,
             "nivel": "Principiante",
@@ -230,7 +231,7 @@ def evaluate_prompt(scenario: dict, student_prompt: str) -> dict:
                 for c in scenario["criteria"]
             ],
             "fortalezas": [],
-            "mejoras": ["El prompt enviado coincide con el ejemplo proporcionado. Escribe tu propia solución con tus propias palabras."],
+            "mejoras": ["El prompt enviado coincide con el ejemplo o con el enunciado del ejercicio. Escribe tu propia solución con tus propias palabras."],
             "ejemplo_prompt_mejorado": IMPROVED_PROMPTS[scenario_id],
         }
 
