@@ -130,6 +130,7 @@ student_prompt = st.text_area(
     height=180,
     placeholder="Escribe aquí tu prompt para resolver la situación...",
     label_visibility="collapsed",
+    key=f"prompt_{selected['id']}",
 )
 
 col_btn, col_info = st.columns([1, 3])
@@ -148,7 +149,7 @@ if evaluate_btn:
     elif len(student_prompt.strip()) < 10:
         st.error("El prompt es demasiado corto para evaluarlo.")
     else:
-        with st.spinner("Analizando tu prompt con IA..."):
+        with st.spinner("Analizando tu prompt..."):
             try:
                 result = evaluate_prompt(selected, student_prompt)
             except Exception as e:
@@ -208,4 +209,4 @@ if evaluate_btn:
             st.info(result["ejemplo_prompt_mejorado"])
 
         st.markdown("---")
-        st.caption("Evaluación generada por IA · Los resultados son orientativos y pueden variar.")
+        st.caption("Los resultados son orientativos y pueden variar.")
