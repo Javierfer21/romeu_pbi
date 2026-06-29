@@ -1,3 +1,4 @@
+import re
 from typing import List
 
 # Scoring thresholds → nivel
@@ -192,6 +193,26 @@ IMPROVED_PROMPTS = {
 }
 
 
+_STOPWORDS = {
+    "de", "la", "el", "en", "y", "a", "los", "las", "por", "para", "con",
+    "una", "un", "que", "se", "es", "del", "al", "o", "si", "entre", "como",
+    "su", "sus", "lo", "le", "les", "nos", "más", "son", "tiene", "hay",
+    "tanto", "ambas", "cada", "este", "esta", "estos", "estas", "también",
+}
+
+def _word_set(text: str) -> set:
+    words = re.findall(r"[a-záéíóúüñ]+", text.lower())
+    return {w for w in words if len(w) > 3 and w not in _STOPWORDS}
+
+def _jaccard(a: set, b: set) -> float:
+    if not a or not b:
+        return 0.0
+    return len(a & b) / len(a | b)
+
+def _is_copied(student_prompt: str, example: str, threshold: float = 0.55) -> bool:
+    return _jaccard(_word_set(student_prompt), _word_set(example)) >= threshold
+
+
 def _matches(text: str, keywords: List[str]) -> bool:
     text_lower = text.lower()
     return any(kw in text_lower for kw in keywords)
@@ -199,6 +220,20 @@ def _matches(text: str, keywords: List[str]) -> bool:
 
 def evaluate_prompt(scenario: dict, student_prompt: str) -> dict:
     scenario_id = scenario["id"]
+
+    if _is_copied(student_prompt, IMPROVED_PROMPTS[scenario_id]):
+        return {
+            "puntuacion_total": 0,
+            "nivel": "Principiante",
+            "criterios": [
+                {"nombre": c, "cumplido": False, "comentario": "Evaluación anulada por copia del prompt de ejemplo."}
+                for c in scenario["criteria"]
+            ],
+            "fortalezas": [],
+            "mejoras": ["El prompt enviado coincide con el ejemplo proporcionado. Escribe tu propia solución con tus propias palabras."],
+            "ejemplo_prompt_mejorado": IMPROVED_PROMPTS[scenario_id],
+        }
+
     criteria = scenario["criteria"]
     kw_sets = CRITERIA_KEYWORDS[scenario_id]
     pos_fb = CRITERIA_POSITIVE_FEEDBACK[scenario_id]
